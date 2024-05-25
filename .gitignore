@@ -1,0 +1,5 @@
+node_modules/
+public/qusetionDB/*.xlsx
+public/qusetionDB/*.xls
+.env
+.DS_Store
