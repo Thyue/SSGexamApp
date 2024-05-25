@@ -31,7 +31,11 @@ app.use(passport.initialize());
 require("./config/passport")(passport);
 
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  // 執行靜態頁面
+  app.use(express.static("client/dist"));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "client", "dist", "index.html")).catch((err) => console.log(err));
+  });
 });
 
 // 使用routers
@@ -42,15 +46,6 @@ app.use("/api/questionManage", questionManage);
 app.use("/api/systemManage", systemManage);
 app.use("/api/users", users);
 app.use("/api/usingLogs", usingLogs);
-
-// 執行靜態頁面
-if (process.env.NODE_ENV === "production") {
-  // Set static folder
-  app.use(express.static("client/dist"));
-  app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "client", "dist", "index.html")).catch((err) => console.log(err));
-  });
-}
 
 const PORT = process.env.PORT || 5000;
 
