@@ -30,12 +30,10 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 require("./config/passport")(passport);
 
-app.get("/", (req, res) => {
-  // 執行靜態頁面
-  app.use(express.static("client/dist"));
-  app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "client", "dist", "index.html")).catch((err) => console.log(err));
-  });
+// 執行靜態頁面
+app.use(express.static("client/dist"));
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "client", "dist", "index.html")).catch((err) => console.log(err));
 });
 
 // 使用routers
