@@ -34,7 +34,7 @@ router.post("/register", (req, res) => {
       } else {
         // 註冊帳號
         const newUser = new User({
-          studentID: req.body.studentID,
+          studentID: parseInt(req.body.studentID, 10),
           name: req.body.name,
           account: req.body.account,
           password: req.body.password,

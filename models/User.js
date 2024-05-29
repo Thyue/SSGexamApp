@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 // 建立 帳戶 模型
 const UserSchema = new Schema({
   studentID: {
-    type: String,
+    type: Number,
     required: true,
   },
   account: {

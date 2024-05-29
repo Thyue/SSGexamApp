@@ -100,7 +100,7 @@ router.post("/resetDatabase", passport.authenticate("jwt", { session: false }), 
       .then(() => {
         // 註冊root帳號
         const newUser = new User({
-          studentID: "0",
+          studentID: 0,
           name: "副排長",
           account: "root",
           password: keys.rootPassword,
