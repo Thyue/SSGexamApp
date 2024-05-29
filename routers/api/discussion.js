@@ -42,34 +42,37 @@ router.post("/add", passport.authenticate("jwt", { session: false }), (req, res)
     name: req.user.name,
     content: req.body.content,
   });
-  // 存入資料庫並維持200筆資料
+  // 存入資料庫並維持100筆資料
   DiscussList.find()
     .sort({ date: 1 })
     .then((discuss) => {
-      if (discuss.length >= 200) {
+      const logLimit = 100;
+      if (discuss.length >= logLimit) {
         DiscussList.deleteOne({ _id: discuss[0]._id })
           .then((discuss) => {
             // 新增留言
             newDiscussList
               .save()
               .then((discuss) => {
-                res.json({
+                return res.json({
                   code: 200,
                   msg: "新增留言成功！",
                   data: discuss,
                 });
               })
               .catch((err) => {
-                res.status(400).json({
-                  code: res.statusCode,
-                  msg: err,
+                return res.json({
+                  code: 400,
+                  msg: "留言存入資料庫發生錯誤!",
+                  sys: err,
                 });
               });
           })
           .catch((err) => {
             return res.json({
               code: 400,
-              msg: err,
+              msg: "維持留言數，刪除留言資料庫發生錯誤!",
+              sys: err,
             });
           });
       } else {
@@ -83,9 +86,10 @@ router.post("/add", passport.authenticate("jwt", { session: false }), (req, res)
             });
           })
           .catch((err) => {
-            res.status(400).json({
-              code: res.statusCode,
-              msg: err,
+            return res.json({
+              code: 400,
+              msg: "留言存入資料庫發生錯誤!",
+              sys: err,
             });
           });
       }
@@ -93,7 +97,8 @@ router.post("/add", passport.authenticate("jwt", { session: false }), (req, res)
     .catch((err) => {
       return res.json({
         code: 400,
-        msg: err,
+        msg: "查詢資料庫留言發生錯誤!",
+        sys: err,
       });
     });
 });
