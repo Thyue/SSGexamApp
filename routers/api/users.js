@@ -166,13 +166,14 @@ router.post("/login", (req, res) => {
                 time: now,
                 content: logRecord,
               });
-              // 存入資料庫並維持200筆資料
+              // 存入資料庫並維持100筆資料
+              const logLimit = 100;
               UsingLog.find()
                 .sort({ time: 1 })
                 .then((log) => {
-                  if (log.length >= 200) {
+                  if (log.length >= logLimit) {
                     // 計算超過幾筆
-                    const over = log.length - 200;
+                    const over = log.length - logLimit;
                     UsingLog.deleteMany({ _id: { $in: log.slice(0, over).map((log) => log._id) } })
                       .then(() => {
                         newUsingLog
