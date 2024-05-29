@@ -265,63 +265,6 @@ router.get("/weakness", passport.authenticate("jwt", { session: false }), (req, 
     });
 });
 
-// 路由：POST api/users/addROOT
-// 用途：新增管理員帳號[用於資料庫甚麼都沒有的狀態，使用時很危險]
-// 存取：public
-router.post("/addROOT", (req, res) => {
-  // 查詢資料庫中是否有註冊過學號
-  User.findOne({ studentID: 0 })
-    .then((user) => {
-      if (user) {
-        return res.json({
-          code: 400,
-          msg: "系統已有Super User！",
-        });
-      } else {
-        // 註冊帳號
-        const newUser = new User({
-          studentID: "0",
-          name: "Super User",
-          account: "root",
-          password: keys.ROOT_PASSWORD,
-          ident: "Admin",
-          exam_exp: {
-            score: 0,
-            data: {},
-          },
-        });
-        // 實施密碼加密
-        bcrypt.genSalt(10, (err, salt) => {
-          bcrypt.hash(newUser.password, salt, (err, hash) => {
-            if (err) throw err;
-            newUser.password = hash;
-            newUser
-              .save()
-              .then((user) => {
-                res.status(200).json({
-                  code: res.statusCode,
-                  msg: "註冊成功！",
-                  data: user,
-                });
-              })
-              .catch((err) => {
-                res.status(400).json({
-                  code: res.statusCode,
-                  msg: err,
-                });
-              });
-          });
-        });
-      }
-    })
-    .catch((err) => {
-      res.status(400).json({
-        code: res.statusCode,
-        msg: err,
-      });
-    });
-});
-
 // 路由：POST api/users/modify
 // 用途：用戶自行修改用戶姓名、帳號-[當前版本未上線]
 // 存取：private
