@@ -30,49 +30,71 @@ router.post("/register", (req, res) => {
         return res.json({
           code: 400,
           msg: ["註冊失敗！", "學號重複申請，請洽管理員！"],
+          sys: "",
         });
       } else {
-        // 註冊帳號
-        const newUser = new User({
-          studentID: parseInt(req.body.studentID, 10),
-          name: req.body.name,
-          account: req.body.account,
-          password: req.body.password,
-          ident: "Register",
-          exam_exp: {
-            score_std: 0,
-            score_sub: 0,
-            data: {},
-          },
-        });
-        // 實施密碼加密
-        bcrypt.genSalt(10, (err, salt) => {
-          bcrypt.hash(newUser.password, salt, (err, hash) => {
-            if (err) throw err;
-            newUser.password = hash;
-            newUser
-              .save()
-              .then((user) => {
-                res.status(200).json({
-                  code: res.statusCode,
-                  msg: ["註冊成功！", "告知管理員，並於1~3日工作天將審核身份。", "審核完畢後，即可登入。"],
-                  data: user,
-                });
-              })
-              .catch((err) => {
-                res.status(400).json({
-                  code: res.statusCode,
-                  msg: err,
+        // 查詢資料庫中是否有註冊過帳號
+        User.findOne({ account: req.body.account })
+          .then((user) => {
+            if (user) {
+              return res.json({
+                code: 400,
+                msg: ["註冊失敗！", "帳號重複申請，請洽管理員！"],
+                sys: "",
+              });
+            } else {
+              // 註冊帳號
+              const newUser = new User({
+                studentID: parseInt(req.body.studentID, 10),
+                name: req.body.name,
+                account: req.body.account,
+                password: req.body.password,
+                ident: "Register",
+                exam_exp: {
+                  score_std: 0,
+                  score_sub: 0,
+                  data: {},
+                },
+              });
+              // 實施密碼加密
+              bcrypt.genSalt(10, (err, salt) => {
+                bcrypt.hash(newUser.password, salt, (err, hash) => {
+                  if (err) throw err;
+                  newUser.password = hash;
+                  newUser
+                    .save()
+                    .then((user) => {
+                      res.status(200).json({
+                        code: res.statusCode,
+                        msg: ["註冊成功！", "告知管理員，並於1~3日工作天將審核身份。", "審核完畢後，即可登入。"],
+                        data: user,
+                      });
+                    })
+                    .catch((err) => {
+                      res.json({
+                        code: 400,
+                        msg: ["註冊失敗！", "請洽管理員！", "存入資料庫時發生錯誤！"],
+                        sys: err,
+                      });
+                    });
                 });
               });
+            }
+          })
+          .catch((err) => {
+            return res.json({
+              code: 400,
+              msg: "查詢註冊帳號時發生錯誤！",
+              sys: err,
+            });
           });
-        });
       }
     })
     .catch((err) => {
-      res.status(400).json({
-        code: res.statusCode,
-        msg: err,
+      return res.json({
+        code: 400,
+        msg: "查詢註冊學號時發生錯誤！",
+        sys: err,
       });
     });
 });
