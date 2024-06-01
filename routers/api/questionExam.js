@@ -53,6 +53,8 @@ router.post("/productExam", passport.authenticate("jwt", { session: false }), (r
         let non_questionGroupList = [];
         questionGroupID.forEach((QGID) => {
           examExpData.data.forEach((item) => {
+            console.log("使用者題庫ID：" + item.QGID);
+            console.log("測驗選擇之ID：" + QGID);
             if (item.QGID !== QGID) {
               non_questionGroupList.push(false);
             } else {
@@ -60,6 +62,8 @@ router.post("/productExam", passport.authenticate("jwt", { session: false }), (r
             }
           });
         });
+        console.log("比對結果");
+        console.log(non_questionGroupList);
         // 將non_questionGroupList中為false，對應questionGroupName資料，回傳給前
         let non_questionGroup = [];
         for (let i = 0; i < non_questionGroupList.length; i++) {
@@ -143,11 +147,33 @@ router.post("/productExam", passport.authenticate("jwt", { session: false }), (r
                   sys: "",
                 });
               } else {
-                return res.json({
-                  code: 200,
-                  msg: "產生考試資料",
-                  data: examData,
+                // 新增伺服器紀錄
+                const logRecordText = ["歷史總能記取教訓，" + name + "！", name + "再次發起了進攻", "革命烈士，" + name + "！"];
+                // 隨機選擇一句話
+                let logRecord = logRecordText[Math.floor(Math.random() * logRecordText.length)];
+                // 推送伺服器紀錄
+                const now = new Date();
+                const newUsingLog = new UsingLog({
+                  time: now,
+                  content: logRecord,
                 });
+                newUsingLog
+                  .save()
+                  .then(() => {
+                    console.log("記錄了使用者行為！");
+                    return res.json({
+                      code: 200,
+                      msg: "產生考試資料",
+                      data: examData,
+                    });
+                  })
+                  .catch((err) => {
+                    return res.json({
+                      code: 400,
+                      msg: ["insert_DB_UsingLog_記錄使用者行為_發生錯誤！"],
+                      sys: err,
+                    });
+                  });
               }
             })
             .catch((err) => {
@@ -167,21 +193,6 @@ router.post("/productExam", passport.authenticate("jwt", { session: false }), (r
           sys: err,
         });
       });
-
-    // 新增伺服器紀錄
-    const logRecordText = ["歷史總能記取教訓，" + name + "！", name + "再次發起了進攻", "革命烈士，" + name + "！"];
-    // 隨機選擇一句話
-    let logRecord = logRecordText[Math.floor(Math.random() * logRecordText.length)];
-    // 推送伺服器紀錄
-    const now = new Date();
-    const newUsingLog = new UsingLog({
-      time: now,
-      content: logRecord,
-    });
-    newUsingLog
-      .save()
-      .then(() => console.log("記錄了使用者行為！"))
-      .catch((err) => console.log(err));
   } else {
     // K書模式、模擬測驗
     QuestionGroup.find({ QGID: { $in: questionGroupID } }, { _id: 0, __v: 0, status: 0, subject: 0, questNum: 0 })
