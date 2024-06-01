@@ -32,6 +32,9 @@ require("./config/passport")(passport);
 
 // 執行靜態頁面
 app.use(express.static("client/dist"));
+// app.get("*", (req, res) => {
+//   res.sendFile(path.resolve(__dirname, "client", "dist", "index.html")).catch((err) => console.log(err));
+// });
 
 // 使用routers
 app.use("/api/accountManage", accountManage);

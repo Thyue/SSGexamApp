@@ -4,7 +4,10 @@
   "description": "resful api",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "client-install": "npm install --prefix client",
+    "client": "npm start --prefix client",
+    "start": "node server.js",
+    "server": "nodemon server.js"
   },
   "author": "趙德柱",
   "license": "ISC",

@@ -29,7 +29,8 @@ router.get("/getDiscussList", (req, res) => {
     .catch((err) => {
       res.json({
         code: 400,
-        msg: [err],
+        msg: ["尋找_資料庫_DiscussList_發生錯誤！"],
+        sys: err,
       });
     });
 });
@@ -56,14 +57,13 @@ router.post("/add", passport.authenticate("jwt", { session: false }), (req, res)
               .then((discuss) => {
                 return res.json({
                   code: 200,
-                  msg: "新增留言成功！",
-                  data: discuss,
+                  msg: ["新增留言成功！"],
                 });
               })
               .catch((err) => {
                 return res.json({
                   code: 400,
-                  msg: "留言存入資料庫發生錯誤!",
+                  msg: ["新增_資料庫_DiscussList_新增留言_發生錯誤！"],
                   sys: err,
                 });
               });
@@ -71,7 +71,7 @@ router.post("/add", passport.authenticate("jwt", { session: false }), (req, res)
           .catch((err) => {
             return res.json({
               code: 400,
-              msg: "維持留言數，刪除留言資料庫發生錯誤!",
+              msg: ["查詢_資料庫_DiscussList_查看留言數_發生錯誤！"],
               sys: err,
             });
           });
@@ -81,14 +81,13 @@ router.post("/add", passport.authenticate("jwt", { session: false }), (req, res)
           .then((discuss) => {
             res.json({
               code: 200,
-              msg: "新增留言成功！",
-              data: discuss,
+              msg: ["新增留言成功！"],
             });
           })
           .catch((err) => {
             return res.json({
               code: 400,
-              msg: "留言存入資料庫發生錯誤!",
+              msg: ["留言存入資料庫發生錯誤!"],
               sys: err,
             });
           });
@@ -97,7 +96,7 @@ router.post("/add", passport.authenticate("jwt", { session: false }), (req, res)
     .catch((err) => {
       return res.json({
         code: 400,
-        msg: "查詢資料庫留言發生錯誤!",
+        msg: ["查詢資料庫留言發生錯誤!"],
         sys: err,
       });
     });

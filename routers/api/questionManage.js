@@ -40,10 +40,10 @@ router.post("/uploadQuestionGroup", passport.authenticate("jwt", { session: fals
     // formidable處理上傳檔案完畢後，回傳結果
     form.parse(req, (err, fields, files) => {
       if (err) {
-        res.status(400).json({
-          code: res.statusCode,
+        res.json({
+          code: 400,
           msg: "上傳失敗",
-          data: err,
+          sys: err,
         });
         return;
       }
@@ -172,15 +172,15 @@ router.post("/uploadQuestionGroup", passport.authenticate("jwt", { session: fals
                     questGroup.questData.MCQ.push(q); // 將題目存入questData
                   } else if (element["正確答案"] === "O" || element["正確答案"] === "X") {
                     // 回傳題組類型錯誤，停止作業
-                    res.status(400).json({
-                      code: res.statusCode,
-                      msg: "題組類型錯誤，是否為學科？",
+                    res.json({
+                      code: 400,
+                      msg: ["題組類型錯誤，是否為學科？"],
                     });
                   } else {
                     // 都不是的話，回傳錯誤，停止作業
-                    res.status(400).json({
-                      code: res.statusCode,
-                      msg: "題型錯誤，或選項異常！",
+                    res.json({
+                      code: 400,
+                      msg: ["題型錯誤，或選項異常！"],
                     });
                   }
                 });
@@ -263,17 +263,17 @@ router.post("/uploadQuestionGroup", passport.authenticate("jwt", { session: fals
                     questGroup.questData.MCQ.push(q); // 將題目存入questData
                   } else {
                     // 都不是的話回傳錯誤，停止作業
-                    res.status(400).json({
-                      code: res.statusCode,
-                      msg: "題型錯誤",
+                    res.json({
+                      code: 400,
+                      msg: ["題型錯誤"],
                     });
                   }
                 });
               } else {
                 // 準則、學科都不是的話回傳錯誤，停止作業
-                res.status(400).json({
-                  code: res.statusCode,
-                  msg: "題組類型錯誤",
+                res.json({
+                  code: 400,
+                  msg: ["題組類型錯誤"],
                 });
               }
               // 儲存至資料庫
@@ -315,27 +315,30 @@ router.post("/uploadQuestionGroup", passport.authenticate("jwt", { session: fals
                           .then(() => {
                             res.status(200).json({
                               code: res.statusCode,
-                              msg: "更新成功",
+                              msg: ["更新成功"],
                             });
                           })
                           .catch((err) => {
-                            res.status(400).json({
-                              code: res.statusCode,
-                              msg: err,
+                            return res.json({
+                              code: 400,
+                              msg: ["更新_資料庫_SystemInfo_重置更新題庫時間_發生錯誤！"],
+                              sys: err,
                             });
                           });
                       })
                       .catch((err) => {
-                        res.status(400).json({
-                          code: res.statusCode,
-                          msg: err,
+                        return res.json({
+                          code: 400,
+                          msg: ["搜尋_資料庫_QuestionGroup_統計題目總題數_發生錯誤！"],
+                          sys: err,
                         });
                       });
                   })
                   .catch((err) => {
-                    res.status(400).json({
-                      code: res.statusCode,
-                      msg: err,
+                    return res.json({
+                      code: 400,
+                      msg: ["尋找更新_資料庫_QuestionGroup_題組儲存_發生錯誤！"],
+                      sys: err,
                     });
                   });
               } else {
@@ -378,42 +381,47 @@ router.post("/uploadQuestionGroup", passport.authenticate("jwt", { session: fals
                           .then(() => {
                             res.status(200).json({
                               code: res.statusCode,
-                              msg: "上傳成功",
+                              msg: ["上傳成功"],
                             });
                           })
                           .catch((err) => {
-                            res.status(400).json({
-                              code: res.statusCode,
-                              msg: err,
+                            return res.json({
+                              code: 400,
+                              msg: ["更新_資料庫_SystemInfo_重置更新題庫時間_發生錯誤！"],
+                              sys: err,
                             });
                           });
                       })
                       .catch((err) => {
-                        res.status(400).json({
-                          code: res.statusCode,
-                          msg: err,
+                        return res.json({
+                          code: 400,
+                          msg: ["搜尋_資料庫_QuestionGroup_統計題目總題數_發生錯誤！"],
+                          sys: err,
                         });
                       });
                   })
                   .catch((err) => {
-                    res.status(400).json({
-                      code: res.statusCode,
-                      msg: err,
+                    return res.json({
+                      code: 400,
+                      msg: ["新增_資料庫_QuestionGroup_題組儲存_發生錯誤！"],
+                      sys: err,
                     });
                   });
               }
             })
             .catch((err) => {
-              res.status(400).json({
-                code: res.statusCode,
-                msg: err,
+              return res.json({
+                code: 400,
+                msg: ["搜尋_資料庫_QuestionGroup_是否有相同題組名_發生錯誤！"],
+                sys: err,
               });
             });
         })
         .catch((err) => {
-          res.status(400).json({
-            code: res.statusCode,
-            msg: err,
+          return res.json({
+            code: 400,
+            msg: ["讀取檔案_發生錯誤！"],
+            sys: err,
           });
         });
     });
@@ -498,9 +506,10 @@ router.get("/getQuestionGroup", passport.authenticate("jwt", { session: false })
 // 存取：private
 router.post("/modifyQuestionGroup", passport.authenticate("jwt", { session: false }), (req, res) => {
   if (req.user.ident !== "Admin") {
-    return res.status(403).json({
-      code: res.statusCode, // 403沒有權限
-      msg: "非管理員無法修改題組",
+    return res.json({
+      code: 403, // 403沒有權限
+      msg: ["非管理員無法取得使用者資料"],
+      sys: "",
     });
   } else {
     // 依據QGID更新該物件
@@ -525,9 +534,10 @@ router.post("/modifyQuestionGroup", passport.authenticate("jwt", { session: fals
 // 存取：private
 router.post("/deleteQuestionGroup", passport.authenticate("jwt", { session: false }), (req, res) => {
   if (req.user.ident !== "Admin") {
-    return res.status(403).json({
-      code: res.statusCode, // 403沒有權限
-      msg: "非管理員無法刪除題組",
+    return res.json({
+      code: 403, // 403沒有權限
+      msg: ["非管理員無法取得使用者資料"],
+      sys: "",
     });
   } else {
     // 依據QGID刪除該物件
@@ -543,7 +553,8 @@ router.post("/deleteQuestionGroup", passport.authenticate("jwt", { session: fals
       .catch((err) => {
         return res.json({
           code: 400,
-          msg: [err],
+          msg: ["尋找刪除_資料庫_QuestionGroup_刪除題組_發生錯誤！"],
+          sys: err,
         });
       });
   }

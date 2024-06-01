@@ -42,9 +42,132 @@ router.get("/getQuestionGroupsList", passport.authenticate("jwt", { session: fal
 // 存取：private
 router.post("/productExam", passport.authenticate("jwt", { session: false }), (req, res) => {
   const name = req.user.name;
+  const questionGroupID = req.body.questionGroupID;
+  const questionGroupName = req.body.qusetionGroupName;
   if (req.body.examMode === "弱點測驗") {
-    // 弱點測試
-    // 題目處理-[待處理]
+    // 取得用戶的ExamExp資料
+    User.findOne({ studentID: req.user.studentID })
+      .then((user) => {
+        const examExpData = user.exam_exp;
+        // 尋找examExpData.data中的QGID，如果沒有回傳沒有的questionGroupName陣列
+        let non_questionGroupList = [];
+        questionGroupID.forEach((QGID) => {
+          examExpData.data.forEach((item) => {
+            if (item.QGID !== QGID) {
+              non_questionGroupList.push(false);
+            } else {
+              non_questionGroupList.push(true);
+            }
+          });
+        });
+        // 將non_questionGroupList中為false，對應questionGroupName資料，回傳給前
+        let non_questionGroup = [];
+        for (let i = 0; i < non_questionGroupList.length; i++) {
+          if (!non_questionGroupList[i]) {
+            non_questionGroup.push(questionGroupName[i]);
+          }
+        }
+        if (non_questionGroup.length !== 0) {
+          let msg = ["不符合題目產出條件！", "未測驗題目既有："];
+          msg = msg.concat(non_questionGroup);
+          res.json({
+            code: 460,
+            msg: msg,
+            sys: "",
+          });
+        } else {
+          // 依照QGID找到對應的題組資料
+          QuestionGroup.find({ QGID: { $in: questionGroupID } }, { _id: 0, __v: 0, status: 0, subject: 0, questNum: 0 })
+            .then((questionGroups) => {
+              let examData = {
+                TFQ: [],
+                SCQ: [],
+                MCQ: [],
+              };
+              questionGroupID.forEach((QGID) => {
+                examExpData.data.forEach((item) => {
+                  if (item.QGID === QGID) {
+                    // 讀取item.questData.familiarity.TFQ小於3的index所對應item.questData.TFQ.QID
+                    item.familiarity.TFQ.forEach((familiarity, index) => {
+                      if (familiarity < 3) {
+                        // 尋找questionGroups，將符合item.questData.TFQ[index].QID之資料放入examData.TFQ
+                        questionGroups.forEach((questionGroup) => {
+                          questionGroup.questData.TFQ.forEach((TFQ) => {
+                            if (TFQ.QID === item.questData.TFQ[index].QID) {
+                              examData.TFQ.push(TFQ);
+                            }
+                          });
+                        });
+                      }
+                    });
+                    item.familiarity.SCQ.forEach((familiarity, index) => {
+                      if (familiarity < 3) {
+                        // 尋找questionGroups，將符合item.questData.SCQ[index].QID之資料放入examData.SCQ
+                        questionGroups.forEach((questionGroup) => {
+                          questionGroup.questData.SCQ.forEach((SCQ) => {
+                            if (SCQ.QID === item.questData.SCQ[index].QID) {
+                              examData.SCQ.push(SCQ);
+                            }
+                          });
+                        });
+                      }
+                    });
+                    item.familiarity.MCQ.forEach((familiarity, index) => {
+                      if (familiarity < 3) {
+                        // 尋找questionGroups，將符合item.questData.MCQ[index].QID之資料放入examData.MCQ
+                        questionGroups.forEach((questionGroup) => {
+                          questionGroup.questData.MCQ.forEach((MCQ) => {
+                            if (MCQ.QID === item.questData.MCQ[index].QID) {
+                              examData.MCQ.push(MCQ);
+                            }
+                          });
+                        });
+                      }
+                    });
+                  }
+                });
+              });
+              // 題目隨機排序
+              examData.TFQ.sort(() => Math.random() - 0.5);
+              examData.SCQ.sort(() => Math.random() - 0.5);
+              examData.MCQ.sort(() => Math.random() - 0.5);
+              // 取出10題
+              examData.TFQ = examData.TFQ.slice(0, 10);
+              examData.SCQ = examData.SCQ.slice(0, 10);
+              examData.MCQ = examData.MCQ.slice(0, 10);
+              // 如果TFQ、SCQ、MCQ題目皆為0，回傳錯誤訊息
+              if (examData.TFQ.length === 0 && examData.SCQ.length === 0 && examData.MCQ.length === 0) {
+                return res.json({
+                  code: 461,
+                  msg: ["該科目你已經很完美了！"],
+                  sys: "",
+                });
+              } else {
+                return res.json({
+                  code: 200,
+                  msg: "產生考試資料",
+                  data: examData,
+                });
+              }
+            })
+            .catch((err) => {
+              return res.json({
+                code: 400,
+                msg: "查詢資料庫之題庫資料發生錯誤!",
+                sys: err,
+              });
+            });
+        }
+      })
+      .catch((err) => {
+        return res.json({
+          code: 400,
+          msg: "查詢資料庫之用戶資料發生錯誤!",
+          msg: "查詢_資料庫_Users_取得ExamExp_發生錯誤！",
+          sys: err,
+        });
+      });
+
     // 新增伺服器紀錄
     const logRecordText = ["歷史總能記取教訓，" + name + "！", name + "再次發起了進攻", "革命烈士，" + name + "！"];
     // 隨機選擇一句話
@@ -61,7 +184,6 @@ router.post("/productExam", passport.authenticate("jwt", { session: false }), (r
       .catch((err) => console.log(err));
   } else {
     // K書模式、模擬測驗
-    const questionGroupID = req.body.questionGroupID;
     QuestionGroup.find({ QGID: { $in: questionGroupID } }, { _id: 0, __v: 0, status: 0, subject: 0, questNum: 0 })
       .then((questionGroups) => {
         let examData = {
@@ -90,7 +212,6 @@ router.post("/productExam", passport.authenticate("jwt", { session: false }), (r
         examData.TFQ.sort(() => Math.random() - 0.5);
         examData.SCQ.sort(() => Math.random() - 0.5);
         examData.MCQ.sort(() => Math.random() - 0.5);
-
         if (req.body.examMode === "K書模式") {
           if (req.body.isRandom) {
             // 回傳選項「隨機排序」之考試資料

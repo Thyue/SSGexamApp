@@ -67,13 +67,12 @@ router.post("/register", (req, res) => {
                       res.status(200).json({
                         code: res.statusCode,
                         msg: ["註冊成功！", "告知管理員，並於1~3日工作天將審核身份。", "審核完畢後，即可登入。"],
-                        data: user,
                       });
                     })
                     .catch((err) => {
                       res.json({
                         code: 400,
-                        msg: ["註冊失敗！", "請洽管理員！", "存入資料庫時發生錯誤！"],
+                        msg: ["新增_資料庫_Users_註冊帳號_發生錯誤！"],
                         sys: err,
                       });
                     });
@@ -84,7 +83,7 @@ router.post("/register", (req, res) => {
           .catch((err) => {
             return res.json({
               code: 400,
-              msg: "查詢註冊帳號時發生錯誤！",
+              msg: ["搜尋_資料庫_Users_是否有註冊過帳號_發生錯誤！"],
               sys: err,
             });
           });
@@ -93,7 +92,7 @@ router.post("/register", (req, res) => {
     .catch((err) => {
       return res.json({
         code: 400,
-        msg: "查詢註冊學號時發生錯誤！",
+        msg: ["搜尋_資料庫_Users_是否有註冊過學號_發生錯誤！"],
         sys: err,
       });
     });
@@ -112,6 +111,7 @@ router.post("/login", (req, res) => {
         return res.json({
           code: 404,
           msg: ["帳戶尚未註冊！"],
+          sys: "",
         });
       }
       // 密碼驗證
@@ -125,11 +125,13 @@ router.post("/login", (req, res) => {
               res.json({
                 code: 423, // 423正在訪問的資源被鎖定
                 msg: ["帳戶已停用！"],
+                sys: "",
               });
             } else if (user.ident === "Register") {
               res.json({
                 code: 423, // 423正在訪問的資源被鎖定
                 msg: ["帳號未開通，請洽管理員！"],
+                sys: "",
               });
             } else {
               const rule = {
@@ -179,35 +181,63 @@ router.post("/login", (req, res) => {
                         newUsingLog
                           .save()
                           .then(() => console.log(logRecord))
-                          .catch((err) => console.log(err));
+                          .catch((err) => {
+                            return res.json({
+                              code: 400,
+                              msg: ["新增_資料庫_UsingLog_新增系統紀錄_發生錯誤！"],
+                              sys: err,
+                            });
+                          });
                       })
-                      .catch((err) => console.log(err));
+                      .catch((err) => {
+                        return res.json({
+                          code: 400,
+                          msg: ["刪除_資料庫_UsingLog_維持系統紀錄筆數_發生錯誤！"],
+                          sys: err,
+                        });
+                      });
                   } else {
                     newUsingLog
                       .save()
                       .then(() => console.log(logRecord))
-                      .catch((err) => console.log(err));
+                      .catch((err) => {
+                        return res.json({
+                          code: 400,
+                          msg: ["新增_資料庫_UsingLog_新增系統紀錄_發生錯誤！"],
+                          sys: err,
+                        });
+                      });
                   }
+                })
+                .catch((err) => {
+                  return res.json({
+                    code: 400,
+                    msg: ["尋找_資料庫_UsingLog_取得系統紀錄_發生錯誤！"],
+                    sys: err,
+                  });
                 });
             }
           } else {
             return res.json({
               code: 400,
               msg: ["密碼錯誤！"],
+              sys: "",
             });
           }
         })
         .catch((err) => {
-          res.json({
+          return res.json({
             code: 400,
-            msg: [err],
+            msg: ["加密_發生錯誤！"],
+            sys: err,
           });
         });
     })
     .catch((err) => {
-      res.json({
+      return res.json({
         code: 400,
-        msg: [err],
+        msg: ["搜尋_資料庫_Users_查用戶是否註冊_發生錯誤！"],
+        sys: err,
       });
     });
 });

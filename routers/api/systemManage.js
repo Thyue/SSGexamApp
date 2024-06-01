@@ -63,23 +63,31 @@ router.get("/getCountDown", (req, res) => {
 // 存取: private
 router.post("/updateCountDown", passport.authenticate("jwt", { session: false }), (req, res) => {
   if (req.user.ident !== "Admin") {
-    return res.status(403).json({
-      code: res.statusCode, // 403沒有權限
-      msg: "非管理員無法取得所有使用者資料",
+    return res.json({
+      code: 403, // 403沒有權限
+      msg: ["非管理員無法取得資料"],
+      sys: "",
     });
   } else {
     // 更新倒數時間
     SystemInfo.findOneAndUpdate({}, { $set: { countDown: req.body.countDown } }, { new: true })
       .then((time) => {
+        const year = time.countDown.getFullYear() - 1911;
+        const month = time.countDown.getMonth() + 1 < 10 ? "0" + (time.countDown.getMonth() + 1) : time.countDown.getMonth() + 1;
+        const date = time.countDown.getDate() < 10 ? "0" + time.countDown.getDate() : time.countDown.getDate();
+        const hour = time.countDown.getHours() < 10 ? "0" + time.countDown.getHours() : time.countDown.getHours();
+        const minute = time.countDown.getMinutes() < 10 ? "0" + time.countDown.getMinutes() : time.countDown.getMinutes();
+        const resTime = year + "年" + month + "月" + date + "日" + hour + "時" + minute + "分";
         res.json({
           code: 200,
-          time: time.countDown,
+          msg: ["已設置倒數時間！", "設置時間：" + resTime],
         });
       })
       .catch((err) => {
-        res.json({
+        return res.json({
           code: 400,
-          msg: [err],
+          msg: ["尋找更新_資料庫_SystemInfo_倒數時間_發生錯誤！"],
+          sys: err,
         });
       });
   }
@@ -93,9 +101,10 @@ router.post("/resetDatabase", passport.authenticate("jwt", { session: false }), 
     return res.json({
       code: 403, // 403沒有權限
       msg: ["非管理員無法重置資料庫"],
+      sys: "",
     });
   } else {
-    // 清空所有使用者資料
+    // 1、清空所有使用者資料
     User.deleteMany()
       .then(() => {
         // 註冊root帳號
@@ -118,81 +127,137 @@ router.post("/resetDatabase", passport.authenticate("jwt", { session: false }), 
             newUser.password = hash;
             newUser
               .save()
-              .then((user) => console.log("1、使用者資料已初始化！"))
-              .catch((err) => console.log(err));
+              .then((user) => {
+                console.log("1、使用者資料已初始化！");
+                // 2、清空所有題庫資料
+                QuestionGroup.deleteMany()
+                  .then(() => {
+                    // 把public/questionDB資料夾內清空
+                    const fs = require("fs");
+                    const path = require("path");
+                    const dir = path.join(__dirname, "../../public/questionDB");
+                    fs.readdir(dir, (err, files) => {
+                      if (err) throw err;
+                      for (const file of files) {
+                        fs.unlink(path.join(dir, file), (err) => {
+                          if (err) throw err;
+                        });
+                      }
+                    });
+                    console.log("2、已清空題庫資料！");
+                    // 3、清空討論區資料
+                    DiscussList.deleteMany()
+                      .then(() => {
+                        console.log("3、已清空討論區資料！");
+                        // 4、清空系統使用紀錄
+                        UsingLog.deleteMany()
+                          .then(() => {
+                            const now = new Date();
+                            const newUsingLog = new UsingLog({
+                              time: now,
+                              content: "系通資料庫已初始化！",
+                            });
+                            newUsingLog
+                              .save()
+                              .then((usingLog) => {
+                                console.log("4、已重置使用者紀錄！");
+                                // 5、初始化倒數計時日及更新時間資料
+                                SystemInfo.deleteMany()
+                                  .then(() => {
+                                    const now = new Date();
+                                    const newSystemInfo = new SystemInfo({
+                                      countDown: now,
+                                      updateInfo: {
+                                        updateTime: now,
+                                        questionCount: {
+                                          standard: {
+                                            TFQ: 0,
+                                            SCQ: 0,
+                                            MCQ: 0,
+                                          },
+                                          subject: {
+                                            TFQ: 0,
+                                            SCQ: 0,
+                                            MCQ: 0,
+                                          },
+                                        },
+                                      },
+                                      systemNotice: [{ title: "系統公告", content: "系統資料庫已重置！", time: now }],
+                                    });
+                                    newSystemInfo
+                                      .save()
+                                      .then((usingLog) => {
+                                        console.log("5、已重置倒數時間、題庫更新時間、系統公告！");
+                                        return res.json({
+                                          code: 200,
+                                          msg: ["系通資料庫已初始化！"],
+                                        });
+                                      })
+                                      .catch((err) => {
+                                        return res.json({
+                                          code: 400,
+                                          msg: ["新增_資料庫_SystemInfo_系統參數初始化_發生錯誤！"],
+                                          sys: err,
+                                        });
+                                      });
+                                  })
+                                  .catch((err) => {
+                                    return res.json({
+                                      code: 400,
+                                      msg: ["刪除_資料庫_SystemInfo_清空所有系統參數資料_發生錯誤！"],
+                                      sys: err,
+                                    });
+                                  });
+                              })
+                              .catch((err) => {
+                                return res.json({
+                                  code: 400,
+                                  msg: ["新增_資料庫_UsingLog_系統紀錄初始化_發生錯誤！"],
+                                  sys: err,
+                                });
+                              });
+                          })
+                          .catch((err) => {
+                            return res.json({
+                              code: 400,
+                              msg: ["刪除_資料庫_UsingLog_清空所有系統紀錄資料_發生錯誤！"],
+                              sys: err,
+                            });
+                          });
+                      })
+                      .catch((err) => {
+                        return res.json({
+                          code: 400,
+                          msg: ["刪除_資料庫_DiscussList_清空所有討論區資料_發生錯誤！"],
+                          sys: err,
+                        });
+                      });
+                  })
+                  .catch((err) => {
+                    return res.json({
+                      code: 400,
+                      msg: ["刪除_資料庫_QuestionGroup_清空所有題組資料_發生錯誤！"],
+                      sys: err,
+                    });
+                  });
+              })
+              .catch((err) => {
+                return res.json({
+                  code: 400,
+                  msg: ["新增_資料庫_Users_使用者初始化_發生錯誤！"],
+                  sys: err,
+                });
+              });
           });
         });
       })
-      .catch((err) => console.log(err));
-    // 清空題庫資料
-    QuestionGroup.deleteMany()
-      .then(() => {
-        // 把public/questionDB資料夾內清空
-        const fs = require("fs");
-        const path = require("path");
-        const dir = path.join(__dirname, "../../public/questionDB");
-        fs.readdir(dir, (err, files) => {
-          if (err) throw err;
-          for (const file of files) {
-            fs.unlink(path.join(dir, file), (err) => {
-              if (err) throw err;
-            });
-          }
+      .catch((err) => {
+        return res.json({
+          code: 400,
+          msg: ["刪除_資料庫_Users_清空所有帳戶資料_發生錯誤！"],
+          sys: err,
         });
-        console.log("2、已清空題庫資料！");
-      })
-      .catch((err) => console.log(err));
-    // 清空討論區資料
-    DiscussList.deleteMany()
-      .then(() => console.log("3、已清空討論區資料！"))
-      .catch((err) => console.log(err));
-    // 清空系統使用紀錄
-    UsingLog.deleteMany()
-      .then(() => {
-        const now = new Date();
-        const newUsingLog = new UsingLog({
-          time: now,
-          content: "系通資料庫已初始化！",
-        });
-        newUsingLog
-          .save()
-          .then((usingLog) => console.log("4、已重置使用者紀錄！"))
-          .catch((err) => console.log(err));
-      })
-      .catch((err) => console.log(err));
-    // 初始化倒數計時日及更新時間資料
-    SystemInfo.deleteMany()
-      .then(() => {
-        const now = new Date();
-        const newSystemInfo = new SystemInfo({
-          countDown: now,
-          updateInfo: {
-            updateTime: now,
-            questionCount: {
-              standard: {
-                TFQ: 0,
-                SCQ: 0,
-                MCQ: 0,
-              },
-              subject: {
-                TFQ: 0,
-                SCQ: 0,
-                MCQ: 0,
-              },
-            },
-          },
-          systemNotice: [{ title: "系統公告", content: "系統資料庫已重置！", time: now }],
-        });
-        newSystemInfo
-          .save()
-          .then((usingLog) => console.log("5、已重置倒數時間、題庫更新時間、系統公告！"))
-          .catch((err) => console.log(err));
-      })
-      .catch((err) => console.log(err));
-    return res.json({
-      code: 200,
-      msg: "系通資料庫已初始化！",
-    });
+      });
   }
 });
 
