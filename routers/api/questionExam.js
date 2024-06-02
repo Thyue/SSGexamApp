@@ -143,6 +143,19 @@ router.post("/productExam", passport.authenticate("jwt", { session: false }), (r
             examData.TFQ = examData.TFQ.slice(0, 10);
             examData.SCQ = examData.SCQ.slice(0, 10);
             examData.MCQ = examData.MCQ.slice(0, 10);
+            // 打亂選項順序
+            examData.SCQ.forEach((SCQ) => {
+              SCQ.options.sort(() => Math.random() - 0.5);
+              SCQ.correctIndex = SCQ.options.findIndex((option) => option === SCQ.correct) + 1;
+            });
+            examData.MCQ.forEach((MCQ) => {
+              MCQ.options.sort(() => Math.random() - 0.5);
+              let correctIndex = [];
+              MCQ.correct.forEach((correct) => {
+                correctIndex.push(MCQ.options.findIndex((option) => option === correct) + 1);
+              });
+              MCQ.correctIndex = correctIndex.sort((a, b) => a - b);
+            });
             // 如果TFQ、SCQ、MCQ題目皆為0，回傳錯誤訊息
             if (examData.TFQ.length === 0 && examData.SCQ.length === 0 && examData.MCQ.length === 0) {
               return res.json({
