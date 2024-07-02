@@ -317,7 +317,7 @@ router.post("/productExam", passport.authenticate("jwt", { session: false }), (r
             // 隨機從SCQ選擇20題
             examData.SCQ = examData.SCQ.slice(0, 20);
             // 隨機從MCQ選擇40題
-            examData.MCQ = examData.MCQ.slice(0, 20);
+            examData.MCQ = examData.MCQ.slice(0, 40);
           } else {
             // 處理學科模擬考題目格式
             // 隨機從TFQ選擇20題
