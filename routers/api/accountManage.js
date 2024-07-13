@@ -118,14 +118,13 @@ router.post("/resetExamExp", passport.authenticate("jwt", { session: false }), (
       sys: "",
     });
   } else {
-    console.log(req.body);
     User.findOneAndUpdate(
       { studentID: req.body.studentID },
       {
         exam_exp: {
           score_std: 0,
           score_sub: 0,
-          data: {},
+          data: [],
         },
       }
     )
