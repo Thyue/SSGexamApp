@@ -4,6 +4,8 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
 
 const keys = require("../../config/keys");
 const User = require("../../models/User");
@@ -141,10 +143,17 @@ router.post("/login", (req, res) => {
                 account: user.account,
                 ident: user.ident,
               };
-              const HOW_LONG = 3600 * 4; // 4小時
+              const LOGIN_HOW_LONG = 3600 * 4; // 4小時後過期
+              const REMEMBERME_HOW_LONG = 1000 * 60 * 60 * 24 * 90; // 90天後過期
               // jwt.sign("規則", "加密名字", "過期時間", "箭頭函數")
-              jwt.sign(rule, keys.secretOrKey, { expiresIn: HOW_LONG }, (err, token) => {
+              jwt.sign(rule, keys.secretOrKey, { expiresIn: LOGIN_HOW_LONG }, (err, token) => {
                 if (err) throw err;
+                // 寫入session
+                if (req.body.rememberMe) {
+                  req.session.cookie.maxAge = REMEMBERME_HOW_LONG; // 設定cookie過期時間
+                  req.session.account = account;
+                  req.session.password = password;
+                }
                 res.json({
                   code: 200,
                   msg: ["登入成功！"],
@@ -240,6 +249,19 @@ router.post("/login", (req, res) => {
         sys: err,
       });
     });
+});
+
+// 路由：GET api/users/getSession
+// 用途：返回的請求的json數據
+// 存取：public
+router.get("/getSession", (req, res) => {
+  res.json({
+    code: 200,
+    data: {
+      account: req.session.account,
+      password: req.session.password,
+    },
+  });
 });
 
 // 路由：GET api/users/current
