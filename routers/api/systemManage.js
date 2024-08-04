@@ -161,7 +161,7 @@ router.post("/resetDatabase", passport.authenticate("jwt", { session: false }), 
                               .save()
                               .then((usingLog) => {
                                 console.log("4、已重置使用者紀錄！");
-                                // 5、初始化倒數計時日及更新時間資料
+                                // 5、初始化倒數時間、題庫更新時間、總題目數量
                                 SystemInfo.deleteMany()
                                   .then(() => {
                                     const now = new Date();
@@ -182,12 +182,11 @@ router.post("/resetDatabase", passport.authenticate("jwt", { session: false }), 
                                           },
                                         },
                                       },
-                                      systemNotice: [{ title: "系統公告", content: "系統資料庫已重置！", time: now }],
                                     });
                                     newSystemInfo
                                       .save()
                                       .then((usingLog) => {
-                                        console.log("5、已重置倒數時間、題庫更新時間、系統公告！");
+                                        console.log("5、已重置倒數時間、題庫更新時間、總題目數量！");
                                         return res.json({
                                           code: 200,
                                           msg: ["系通資料庫已初始化！"],

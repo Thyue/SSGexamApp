@@ -57,26 +57,6 @@ const SystemInfoSchema = new Schema({
       },
     },
   },
-  // 系統公告
-  systemNotice: {
-    type: Array,
-    required: true,
-    // 系統公告標題
-    title: {
-      type: String,
-      required: true,
-    },
-    // 系統公告內容
-    content: {
-      type: String,
-      required: true,
-    },
-    // 系統公告發布時間
-    time: {
-      type: Date,
-      required: true,
-    },
-  },
 });
 
 module.exports = SystemInfo = mongoose.model("systemInfo", SystemInfoSchema);

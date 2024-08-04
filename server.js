@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const passport = require("passport");
 const path = require("path");
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
 const app = express();
 require("dotenv").config();
 
@@ -25,6 +27,18 @@ mongoose
 // 使用body-parser中間件
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+// 使用cookie-parser中間件
+app.use(cookieParser());
+
+// 使用express-session中間件
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: true,
+    saveUninitialized: true,
+  })
+);
 
 // passport 初始化
 app.use(passport.initialize());

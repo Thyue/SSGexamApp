@@ -321,15 +321,15 @@ router.get("/learningRecord", passport.authenticate("jwt", { session: false }), 
     });
 });
 
-// 路由：GET api/users/weakness
-// 用途：用戶查詢弱點分析
+// 路由：POST api/users/modify
+// 用途：用戶自行修改用戶姓名OK
 // 存取：private
-router.get("/weakness", passport.authenticate("jwt", { session: false }), (req, res) => {
-  User.findOne({ studentID: req.user.studentID })
-    .then((user) => {
+router.post("/modify", passport.authenticate("jwt", { session: false }), (req, res) => {
+  User.findOneAndUpdate({ studentID: req.body.studentID }, { name: req.body.name })
+    .then(() => {
       res.status(200).json({
         code: res.statusCode,
-        data: user.exam_exp,
+        msg: "修改成功！",
       });
     })
     .catch((err) => {
@@ -340,21 +340,15 @@ router.get("/weakness", passport.authenticate("jwt", { session: false }), (req, 
     });
 });
 
-// 路由：POST api/users/modify
-// 用途：用戶自行修改用戶姓名、帳號-[當前版本未上線]
+// 路由：GET api/users/weakness
+// 用途：用戶查詢弱點分析
 // 存取：private
-// router.post('/modify', passport.authenticate('jwt', { session: false }), (req, res) => {
-//   User.findOneAndUpdate(
-//     { studentID: req.user.studentID },
-//     {
-//       name: req.body.name,
-//       account: req.body.account,
-//     }
-//   )
-//     .then(() => {
+// router.get("/weakness", passport.authenticate("jwt", { session: false }), (req, res) => {
+//   User.findOne({ studentID: req.user.studentID })
+//     .then((user) => {
 //       res.status(200).json({
 //         code: res.statusCode,
-//         msg: '修改成功！',
+//         data: user.exam_exp,
 //       });
 //     })
 //     .catch((err) => {
