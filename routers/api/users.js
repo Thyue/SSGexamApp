@@ -252,7 +252,7 @@ router.post("/login", (req, res) => {
 });
 
 // 路由：GET api/users/getSession
-// 用途：返回的請求的json數據
+// 用途：運用session取得當前用戶帳號密碼(登入頁面記憶功能)
 // 存取：public
 router.get("/getSession", (req, res) => {
   res.json({
@@ -295,9 +295,10 @@ router.get("/predictedScore", passport.authenticate("jwt", { session: false }), 
       });
     })
     .catch((err) => {
-      res.status(400).json({
-        code: res.statusCode,
-        msg: err,
+      return res.json({
+        code: 400,
+        msg: ["find_DB_Users_查詢用戶預測分數_發生錯誤！"],
+        sys: err,
       });
     });
 });
@@ -327,15 +328,16 @@ router.get("/learningRecord", passport.authenticate("jwt", { session: false }), 
 router.post("/modify", passport.authenticate("jwt", { session: false }), (req, res) => {
   User.findOneAndUpdate({ studentID: req.body.studentID }, { name: req.body.name })
     .then(() => {
-      res.status(200).json({
-        code: res.statusCode,
+      return res.json({
+        code: 200,
         msg: "修改成功！",
       });
     })
     .catch((err) => {
-      res.status(400).json({
-        code: res.statusCode,
-        msg: err,
+      return res.json({
+        code: 400,
+        msg: ["findOneAndUpdate_DB_Users_修改用戶參數_發生錯誤！"],
+        sys: err,
       });
     });
 });
