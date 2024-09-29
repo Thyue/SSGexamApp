@@ -513,11 +513,11 @@ router.post("/modifyQuestionGroup", passport.authenticate("jwt", { session: fals
     });
   } else {
     // 依據QGID更新該物件
-    QuestionGroup.findOneAndUpdate({ QGID: req.body.QGID }, req.body)
+    QuestionGroup.findOneAndUpdate({ QGID: req.body.QGID }, { status: req.body.status })
       .then((questionGroup) => {
         return res.json({
           code: 200,
-          msg: ["修改題組成功"],
+          msg: ["修改題組狀態成功"],
         });
       })
       .catch((err) => {
